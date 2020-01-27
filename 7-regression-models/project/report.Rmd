@@ -1,0 +1,151 @@
+---
+title: 'Regression Models Course Project - Transmission effect on car MPG performance'
+author: "Henrique Souza (github.com/htssouza)"
+output:
+  html_document: default
+  pdf_document:
+    pandoc_args:
+    - +RTS
+    - -K64m
+    - -RTS
+---
+
+# Executive Summary
+
+# Data Analysis
+
+```{r echo = FALSE}
+library(datasets)
+suppressWarnings(library(dplyr))
+library(ggplot2)
+suppressWarnings(library(GGally))
+library(stats)
+data(mtcars)
+mtcars <- mutate(mtcars, am = am + 1)
+mtcars <- mutate(mtcars, am = factor(am))
+levels(mtcars$am) <- c("auto", "manual")
+```
+
+MPG distribution by Transmission (only):
+```{r echo = FALSE}
+g <- ggplot(data = mtcars, aes(am, mpg))
+g <- g + geom_violin(stat = "ydensity", color = "black", size = 2)
+g <- g + xlab("Type of transmission")
+g <- g + ylab("MPG density")
+g
+```
+
+
+# Models
+
+# Residual Analysis
+
+# Model selection
+
+# Conclusion
+
+# Appendix
+
+Plotting variable pairs (linear model fitting lines):
+```{r echo = FALSE}
+ggpairs(mtcars, lower = list(continuous = wrap("smooth", method = "lm")))
+```
+
+
+
+
+Defining our random seed and loading libraries.
+
+
+Creating 1000 samples of 40 exponential each.
+For all the simulations lambda will be equal to 0.2.
+
+```{r echo = TRUE}
+lambda <- 0.2
+sample.size <- 40
+sample.count <- 1000
+```
+
+Now lets generate our simulation data.
+
+```{r echo = TRUE}
+sample.data <- matrix(rexp(sample.size * sample.count, lambda), sample.count, sample.size)
+```
+
+Summary of our data:
+
+```{r echo = TRUE}
+str(sample.data)
+```
+
+# Sample Mean versus Theoretical Mean
+
+Calculating sample means:
+
+```{r echo = FALSE}
+sample.means <- apply(sample.data, 1, mean)
+```
+
+In the plot below you can see: the sample mean, the theorethical mean along
+with a histogram of the sample means:
+
+```{r echo = FALSE}
+g <- ggplot(data = data.frame(sample.means), aes(x = sample.means))
+g <- g + labs(title = "Distribution of sample means", x = "sample mean", y = "count")
+g <- g + geom_histogram(bins = 50, color = "black", fill = "lightblue")
+g <- g + geom_vline(aes(xintercept=mean(sample.means), color = "sample_mean"), linetype = "dashed")
+g <- g + geom_vline(aes(xintercept=(1/lambda), color = "theorethical_mean"), linetype = "dashed")
+g <- g + scale_color_manual(name = "lines", values = c(sample_mean = "red", theorethical_mean = "green"))
+g
+```
+
+The two reference lines are very close. The exact values are:
+
+```{r echo = TRUE}
+paste0("theorethical_mean = ", 1 / lambda)
+```
+
+```{r echo = TRUE}
+paste0("sample_mean = ", mean(sample.means))
+```
+
+
+# Sample Variance versus Theoretical Variance
+
+Let's compute the variance of our simulated data:
+
+```{r echo = TRUE}
+sample.vars <- apply(sample.data, 1, sd)
+```
+
+In the plot below you can see: the sample variance, the theorethical variance along
+with a histogram of the sample variances:
+
+```{r echo = FALSE}
+g <- ggplot(data = data.frame(sample.vars), aes(x = sample.vars))
+g <- g + labs(title = "Distribution of sample variance", x = "sample variance", y = "count")
+g <- g + geom_histogram(bins = 50, color = "black", fill = "lightblue")
+g <- g + geom_vline(aes(xintercept=mean(sample.vars), color = "sample_var"), linetype = "dashed")
+g <- g + geom_vline(aes(xintercept=(1/lambda), color = "theorethical_var"), linetype = "dashed")
+g <- g + scale_color_manual(name = "lines:", values = c(sample_var = "red", theorethical_var = "green"))
+g
+```
+
+# Distribution
+
+Plotting together the density of 1000 numbers generated using the exponential ditribution
+along with a histogram of our sample means (1000 groups of 40.)
+
+```{r echo = FALSE}
+sample.exps <- rexp(sample.count, lambda)
+sample.dist <- c(sample.means, sample.exps)
+sample.dist.label <- factor(rep(c("mean", "exp"), each = sample.count))
+sample.dist.df <- data.frame(sample = sample.dist, label = sample.dist.label)
+
+g <- ggplot(data = sample.dist.df, aes(x = sample, fill = label, color = label))
+g <- g + labs(title = "Distribution comparison", x = "Sample", y = "count")
+g <- g + geom_histogram(bins = 200, alpha = 0.5)
+g
+```
+
+You can see that the mean curve has the curvature of a normal.
