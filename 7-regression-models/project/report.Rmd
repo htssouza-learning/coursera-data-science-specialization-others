@@ -12,6 +12,13 @@ output:
 
 # Executive Summary
 
+Motor Trend Magazine is interested in exploring the relationship between a set of variables and miles per gallon (MPG). They are particularly interested in the following two questions:
+
+1. Is an automatic or manual transmission better for MPG.
+1. Quantify the MPG difference between automatic and manual transmissions.
+
+In this document we compare different models and show that *for an average car, manual transmission outperforms automatic in <strong>11%</strong> MPG efficience*.
+
 # Data Analysis
 
 ```{r echo = FALSE, message = FALSE}
@@ -21,10 +28,23 @@ library(ggplot2)
 library(GGally)
 library(stats)
 data(mtcars)
+am.levels <- c("auto", "manual")
+am.auto <- as.factor(c(1, 2))
+am.manual <- as.factor(c(1, 2))
+levels(am.auto) <- am.levels
+levels(am.manual) <- am.levels
+am.auto <- am.auto[1]
+am.manual <- am.manual[2]
 mtcars <- mtcars %>%
   mutate(am = am + 1) %>%
   mutate(am = factor(am))
-levels(mtcars$am) <- c("auto", "manual")
+levels(mtcars$am) <- am.levels
+```
+
+How our dataset looks like:
+
+```{r echo = FALSE, message = FALSE}
+str(mtcars)
 ```
 
 MPG distribution by Transmission:
@@ -44,15 +64,15 @@ the following models were selected for comparison:
 
 1. Using only the Transmission.
 1. Transmission and Weight.
-1. Transmission, Weight and Cylinders.
-1. Transmission, Weight, Cylinders and Displacement.
-1. Transmission, Weight, Cylinders, Displacement and Gears.
+1. Transmission, Weight and HP
+1. Transmission, Weight, HP and Displacement.
+1. Transmission, Weight, HP, Displacement and Gears.
 
 Other variables are being ignored:
 
-- HP because it is a product of other variables (like Cylinders and Displacement).
+- Cylinder because it is a product of other variables (and it is catehorical).
 - Axle Ratio (not much related to MPG efficience).
-- Quarter of mile performance (somewhat related to HP).
+- Quarter of mile performance (related to HP).
 - Engine type and Carburators which can be linked to transmission type as well.
 
 We will be using linear models as MPG is not a binary or a count variable.
@@ -61,9 +81,9 @@ Fitting our models:
 ```{r echo = TRUE}
 mod1 <- lm(mpg ~ am, data = mtcars)
 mod2 <-  lm(mpg ~ am + wt, data = mtcars)
-mod3 <-  lm(mpg ~ am + wt + cyl, data = mtcars)
-mod4 <-  lm(mpg ~ am + wt + cyl + disp, data = mtcars)
-mod5 <-  lm(mpg ~ am + wt + cyl + disp + gear, data = mtcars)
+mod3 <-  lm(mpg ~ am + wt + hp, data = mtcars)
+mod4 <-  lm(mpg ~ am + wt + hp + disp, data = mtcars)
+mod5 <-  lm(mpg ~ am + wt + hp + disp + gear, data = mtcars)
 ```
 
 # Model selection
@@ -82,7 +102,7 @@ We will stick with Model 3.
 Plotting the residuals for our choosen model:
 
 ```{r echo = FALSE, message = FALSE}
-mpghat <- predict(mod2)
+mpghat <- predict(mod3)
 resid <- mtcars$mpg - mpghat
 
 g <- ggplot(data.frame(x = mtcars$mpg, y = resid), aes(x = x, y = y))
@@ -98,9 +118,27 @@ g
 
 # Conclusion
 
+Using our model to compare the performance of average cars with both transmission
+types we have that a *Manual* one has a better MPG performance of:
+
+```{r echo = FALSE}
+wt.mean <- mean(mtcars$wt)
+hp.mean <- mean(mtcars$hp)
+auto.mpg <- predict(mod3, data.frame(am = am.auto, wt = wt.mean, hp = hp.mean))
+manual.mpg <- predict(mod3, data.frame(am = am.manual, wt = wt.mean, hp = hp.mean))
+cat(paste(round(as.numeric(((manual.mpg - auto.mpg) / (auto.mpg)) * 100)), "%"))
+```
+
 # Appendix
 
-Plotting variable pairs (linear model fitting lines):
+Plotting all variable pairs (linear model fitting lines):
 ```{r echo = FALSE, message = FALSE}
 ggpairs(mtcars, lower = list(continuous = wrap("smooth", method = "lm")))
 ```
+
+Plotting variable pairs used in our model (linear model fitting lines):
+```{r echo = FALSE, message = FALSE}
+mtcars.used <- select(mtcars, mpg, am, wt, hp)
+ggpairs(mtcars.used, lower = list(continuous = wrap("smooth", method = "lm")))
+```
+
