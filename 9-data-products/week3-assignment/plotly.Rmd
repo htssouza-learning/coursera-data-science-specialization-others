@@ -1,0 +1,35 @@
+---
+title: "Plotly in Presentation"
+author: "Henrique Souza"
+date: "10/02/2020"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r echo = FALSE, message = FALSE}
+library(Cairo)
+library(ggplot2)
+library(plotly)
+```
+
+## Plotly in Presentation
+
+Visualising MPG versus HP (grouping by Cylinders):
+
+```{r echo = FALSE, message = FALSE}
+mtcars$cyl <- as.factor(mtcars$cyl)
+g <- ggplot(data = mtcars, aes(x = hp, y = mpg, color = cyl)) +
+    geom_point() +
+    labs(
+        x = "Power (HP)",
+        y = "MPG",
+        color = "Cylinders"
+    ) +
+    theme(legend.position = c(0.95, 0.95), legend.justification = c("right", "top")) +
+    geom_smooth(method = "lm")
+ggplotly(g)
+```
+
